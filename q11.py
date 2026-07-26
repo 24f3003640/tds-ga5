@@ -749,6 +749,8 @@ def new_dispatch(state: Dict[str, Any], act: Dict[str, Any], attempt: int,
 # POST /v2/incidents
 # --------------------------------------------------------------------------- #
 @router.post("/v2/incidents")
+@router.post("/v2/incidents/v2/incidents")
+@router.post("/incidents")
 async def create_incident(request: Request):
     try:
         body = await request.json()
@@ -864,6 +866,8 @@ async def create_incident(request: Request):
 # GET /v2/incidents/{runId}
 # --------------------------------------------------------------------------- #
 @router.get("/v2/incidents/{run_id}")
+@router.get("/v2/incidents/v2/incidents/{run_id}")
+@router.get("/incidents/{run_id}")
 async def get_incident(run_id: str):
     state = INCIDENTS.get(run_id)
     if not state:
@@ -950,6 +954,8 @@ def _find_action(state: Dict[str, Any], action_id: str, call_id: str) -> Optiona
 # POST /v2/incidents/{runId}/receipts
 # --------------------------------------------------------------------------- #
 @router.post("/v2/incidents/{run_id}/receipts")
+@router.post("/v2/incidents/v2/incidents/{run_id}/receipts")
+@router.post("/incidents/{run_id}/receipts")
 async def post_receipt(run_id: str, request: Request):
     state = INCIDENTS.get(run_id)
     if not state:
