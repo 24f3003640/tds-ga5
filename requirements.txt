@@ -1,8 +1,8 @@
-fastapi==0.104.1
-uvicorn==0.24.0
-pydantic==2.5.2
-openai>=1.0.0
-python-dotenv==1.0.0
-httpx==0.25.1
+fastapi
+uvicorn
+pydantic
+openai
+python-dotenv
+httpx
 google-generativeai
-cryptography==42.0.8
+cryptography
