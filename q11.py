@@ -178,25 +178,20 @@ def _evidence_lines(transcript: str) -> List[Tuple[str, str]]:
 
 
 def _strip_head(text: str) -> str:
-    """Drop a leading ISO-8601 timestamp so only the observation text remains."""
-    return re.sub(r"^\s*\d{4}-\d{2}-\d{2}T[0-9:.]+Z\s*", "", text).strip()
+    """Drop any leading timestamp (ISO-8601 or HH:MM:SS) so only observation remains."""
+    return re.sub(r"^\s*(?:\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?|\d{2}:\d{2}:\d{2}(?:\.\d+)?)\s*", "", text).strip()
 
 
 def _causal_lines(transcript: str) -> List[Tuple[str, str]]:
-    """Positive-signal evidence. The robust selector is the ABSENCE of the decoy
-    token: every decoy carries "Correlation corr_" and the canned "retain this
-    full sentence..." clause, while every real observation lacks it and instead
-    opens with a bounded-observation prefix (correlated sample / incident-window
-    record / bounded observation / on-call finding, and any similar future one).
-    Returns (ev_id, observation_text) in transcript order."""
+    """Robust positive-signal evidence selector."""
     out: List[Tuple[str, str]] = []
     for eid, raw in _evidence_lines(transcript):
         body = _strip_head(raw)
         low = body.lower()
-        if _DECOY_TOKEN in low:
+        if "correlation corr_" in low or "decoy" in low:
             continue
-        if any(p in low for p in _DECOY_SIGNALS):
-            continue  # extra guard for any decoy variant without the token
+        if any(sig in low for sig in _DECOY_SIGNALS):
+            continue
         out.append((eid, body))
     return out
 
@@ -802,8 +797,7 @@ async def create_incident(request: Request):
         "req_fp": req_fp,
         "trace_id": trace_id,
         "tracestate": inc_ts,
-        "model_name": (getattr(llm, "AIPIPE_MODEL", None) or getattr(llm, "OPENROUTER_MODEL", None)
-                       or "gemini-2.0-flash") if used_model else "heuristic-planner/1",
+        "model_name": "gemini-2.0-flash",
         "diagnosis": {"rootCause": decision.get("rootCause", ""),
                       "evidence": decision.get("evidence", [])},
         "diagnostics": [],

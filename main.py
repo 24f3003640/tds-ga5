@@ -477,12 +477,25 @@ def check_guardrail(req: GuardrailRequest):
 class ScanRequest(BaseModel):
     skill: str
 
+@app.post("/q4")
 @app.post("/q4/scan")
+@app.post("/scanner")
 @app.post("/scan")
-def scan_skill_endpoint(req: ScanRequest):
+async def scan_skill_endpoint(request: Request):
+    skill_text = ""
+    try:
+        body = await request.json()
+        if isinstance(body, dict):
+            skill_text = body.get("skill") or body.get("content") or body.get("text") or body.get("file") or ""
+        elif isinstance(body, str):
+            skill_text = body
+    except Exception:
+        raw_bytes = await request.body()
+        skill_text = raw_bytes.decode('utf-8', errors='ignore')
+
     try:
         from scanner import scan_skill
-        return {"categories": scan_skill(req.skill)}
+        return {"categories": scan_skill(skill_text)}
     except Exception as e:
         print(f"Error in scan_skill: {e}", flush=True)
         return {"categories": []}
