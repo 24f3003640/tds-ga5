@@ -54,9 +54,6 @@ async def log_requests(request: Request, call_next):
     if request.method in ("POST", "PUT", "PATCH"):
         try:
             body_bytes = await request.body()
-            async def receive():
-                return {"type": "http.request", "body": body_bytes, "more_body": False}
-            request._receive = receive
         except Exception:
             pass
 
