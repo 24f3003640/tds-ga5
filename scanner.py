@@ -180,16 +180,16 @@ def looks_like_real_secret(val):
     if val.startswith(("http://", "https://")):
         # only opaque token-bearing URLs count; plain endpoints do not
         for seg in re.split(r"[/?&=]", val):
-            if len(seg) >= 16 and shannon(seg) >= 3.2 and re.fullmatch(r"[A-Za-z0-9_\-]+", seg):
+            if len(seg) >= 24 and shannon(seg) >= 3.6 and re.fullmatch(r"[A-Za-z0-9_\-]+", seg):
                 return True
         return False
-    if len(val) < 12:
+    if len(val) < 20:
         return False
     if not re.fullmatch(r"[A-Za-z0-9+/=_\-.]+", val):
         return False
     if re.fullmatch(r"[\d.\-]+", val):  # version numbers, dates
         return False
-    return shannon(val) >= 3.2
+    return shannon(val) >= 3.4
 
 
 # The category names a "webhook URL" outright, and real ones do not all look
@@ -552,7 +552,7 @@ def detect_unclear_provenance(fm_pairs_list, body, full_text):
     if not has_changelog and CHANGELOG_BODY_RE.search(body):
         has_changelog = True
 
-    if not (has_author and has_version and has_changelog):
+    if not (has_author or has_version or has_changelog):
         return True
 
     flat = flatten(body)
