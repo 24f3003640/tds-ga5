@@ -419,6 +419,9 @@ def heuristic_decision(incident: Dict[str, Any], policy: Dict[str, Any],
     chosen_diag = [t for t in ranked if tool_score(t) > 0][:max_diag]
     if not chosen_diag and ranked:
         chosen_diag = ranked[:1]
+    if not chosen_diag and catalog:
+        candidates = [t for t in catalog if t.get("name") != chosen_effect_name]
+        chosen_diag = candidates[:1] if candidates else catalog[:1]
 
     diagnostics = []
     for t in chosen_diag:
