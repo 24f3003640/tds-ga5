@@ -17,6 +17,10 @@ def get_llm_credentials():
     model = os.environ.get("LLM_MODEL") or os.environ.get("OPENROUTER_MODEL") or ("gpt-4o-mini" if os.environ.get("AIPIPE_TOKEN") or os.environ.get("OPENAI_API_KEY") else "nvidia/nemotron-3-ultra-550b-a55b:free")
     return api_key.strip(), base_url.rstrip("/"), model
 
+def available() -> bool:
+    api_key, _, _ = get_llm_credentials()
+    return bool(api_key)
+
 async def call_llm_json(prompt: str, timeout: float = 15.0) -> dict:
     """
     Calls configured LLM (AIPipe, OpenRouter, OpenAI) and parses JSON output.

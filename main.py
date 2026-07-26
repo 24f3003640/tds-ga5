@@ -552,20 +552,19 @@ class BudgetRequest(BaseModel):
     budget_tokens: int
     steps: List[Step]
 
-def canonical_args(args_dict: Dict[str, Any], irrelevant_field: str) -> str:
-    cleaned = {k: v for k, v in args_dict.items() if k not in ("trace_id", "request_id", "client_ts", irrelevant_field)}
-    def norm(val):
-        if isinstance(val, str):
-            return " ".join(val.split())
-        elif isinstance(val, dict):
-            return {k: norm(v) for k, v in val.items()}
-        elif isinstance(val, list):
-            return [norm(x) for x in val]
-        return val
-    cleaned = norm(cleaned)
-    return json.dumps(cleaned, sort_keys=True)
+def canonical_args(args_dict: Any, irrelevant_field: str) -> str:
+    def clean(obj):
+        if isinstance(obj, dict):
+            return {k: clean(v) for k, v in sorted(obj.items()) if k not in ("request_id", "trace_id", "client_ts", irrelevant_field)}
+        elif isinstance(obj, list):
+            return [clean(x) for x in obj]
+        elif isinstance(obj, str):
+            return " ".join(obj.split())
+        return obj
+    return json.dumps(clean(args_dict), sort_keys=True)
 
 @app.post("/q5/check")
+@app.post("/budget-guard")
 def check_budget_loop(req: BudgetRequest):
     if not CONFIG or "q5" not in CONFIG:
         return {"decision": "halt", "reason": "Server not configured with STUDENT_EMAIL"}
