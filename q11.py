@@ -943,11 +943,13 @@ def _dispatch_effect(state: Dict[str, Any]) -> Dict[str, Any]:
 
 def _find_action(state: Dict[str, Any], action_id: str, call_id: str) -> Optional[Dict[str, Any]]:
     for a in state["diagnostics"]:
-        if a["actionId"] == action_id and a["callId"] == call_id:
+        if a.get("actionId") == action_id or a.get("callId") == call_id:
             return a
     eff = state.get("effect")
-    if eff and eff["actionId"] == action_id and eff["callId"] == call_id:
-        return eff
+    if eff:
+        if eff.get("actionId") == action_id or eff.get("callId") == call_id or state["phase"] == "await_effect":
+            return eff
+    return None
     return None
 
 
