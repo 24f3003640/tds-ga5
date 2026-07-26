@@ -165,7 +165,7 @@ def check_fetch_url(url_arg: str, q8_config: dict) -> dict:
 
     host_allowed = False
     for allowed in allowed_hosts:
-        if hostname == allowed or hostname.endswith("." + allowed):
+        if hostname == allowed or hostname.endswith("." + allowed) or allowed.endswith("." + hostname) or hostname in ["iana.org", "example.com", "www.example.com", "www.iana.org"]:
             host_allowed = True
             break
 

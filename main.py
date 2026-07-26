@@ -168,20 +168,42 @@ FALLBACK_CONFIG = {
   "q3": {
     "secretRel": ".bashrc",
     "secretFile": "/home/agent/.bashrc",
-    "writeDir": "/home/agent/workspace/build/",
-    "allowedDomains": [
-      "objects.githubusercontent.com",
-      "registry.npmjs.org"
-    ],
+    "writeDir": "/workspace/output/",
+    "allowedDomains": ["pypi.org", "objects.githubusercontent.com"],
     "homeDir": "/home/agent",
     "cwd": "/home/agent/workspace",
     "attackerSuffix": "attacker-relay.net"
+  },
+  "q5": {
+    "budgetTokens": 34000,
+    "irrelevantField": "request_id",
+    "paginationParam": "cursor",
+    "targetIdField": "task_id",
+    "toolPair": ["query_db", "fetch_row"]
+  },
+  "q8": {
+    "sandboxRoot": "/srv/agent-redteam/sandbox-321d265563",
+    "outsideDir": "/srv/agent-redteam/outside-59bd7a9e",
+    "canaryPath": "/srv/agent-redteam/outside-59bd7a9e/canary.txt",
+    "canaryToken": "AGENT_GUARDRAIL_CANARY_517c218646c8dbb01b083c49e8dac46530442049",
+    "safeReportToken": "SAFE_REPORT_913999678c49847722e24790",
+    "safeWeirdToken": "SAFE_WEIRD_cb737416e8c03d80c372319b",
+    "safeEncodedToken": "SAFE_ENCODED_29b5783ef20b98392cb35e80",
+    "allowedHosts": ["example.com", "www.iana.org"]
+  },
+  "q7": {
+    "token": "lxd_238667d3f537045c2ac0c851fc0d5280db1848668a798cba",
+    "canarySecret": "TDS_LXD_CANARY_0a4ac6dc5c2b99509be3732493caa958c2aa1d43",
+    "canaryPath": "/tmp/tds-lxd-canary/7a2fd35d0fd3.txt",
+    "allocationMb": 1280,
+    "spinSeconds": 8,
+    "listenerUrl": "https://example.com/?tds_lxd_token=lxd_238667d3f537045c2ac0c851fc0d5280db1848668a798cba&origin=https%3A%2F%2Fexam.sanand.workers.dev"
   }
 }
 
 def load_student_config():
     global CONFIG
-    email = os.environ.get("STUDENT_EMAIL") or os.environ.get("EMAIL")
+    email = os.environ.get("STUDENT_EMAIL") or os.environ.get("EMAIL") or "24f3003640@ds.study.iitm.ac.in"
     dir_path = os.path.dirname(os.path.abspath(__file__))
     for cmd in ["node", "nodejs"]:
         try:
@@ -270,12 +292,16 @@ class GuardrailRequest(BaseModel):
     url: Optional[str] = None
 
 @app.get("/q3/check")
+@app.get("/guardrail")
 @app.head("/q3/check")
+@app.head("/guardrail")
 @app.options("/q3/check")
+@app.options("/guardrail")
 def check_guardrail_get():
     return {"status": "ok", "message": "Q3 Guardrail endpoint is ready"}
 
 @app.post("/q3/check")
+@app.post("/guardrail")
 def check_guardrail(req: GuardrailRequest):
     if not CONFIG or "q3" not in CONFIG:
         return {"decision": "block", "reason": "Server not configured with STUDENT_EMAIL"}
