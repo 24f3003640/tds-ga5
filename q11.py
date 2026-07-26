@@ -406,7 +406,12 @@ def heuristic_decision(incident: Dict[str, Any], policy: Dict[str, Any],
                 args[key] = str(_query_term)
         return args
 
-    # 4. Diagnostic tools — 1..max_diag non-effect, non-approval, cause-relevant.
+    # 4. Effect — cause-mapped; destructive ONLY when artifacts strongly confirm it.
+    chosen_effect_name = _choose_effect(root_cause, effect_tools, approval_tools,
+                                        release=release, flag=flag)
+    chosen_effect = next((t for t in catalog if t.get("name") == chosen_effect_name), None)
+
+    # 5. Diagnostic tools — 1..max_diag non-effect, non-approval, cause-relevant.
     diag_tools = [t for t in catalog
                   if t.get("name") not in effect_tools and t.get("name") not in approval_tools]
 
@@ -431,11 +436,7 @@ def heuristic_decision(incident: Dict[str, Any], policy: Dict[str, Any],
             "evidence": evidence[:2] if evidence else [],
         })
 
-    # 5. Effect — cause-mapped; destructive ONLY when artifacts strongly confirm it.
     effect = None
-    chosen_effect_name = _choose_effect(root_cause, effect_tools, approval_tools,
-                                        release=release, flag=flag)
-    chosen_effect = next((t for t in catalog if t.get("name") == chosen_effect_name), None)
     if chosen_effect:
         effect = {
             "toolName": chosen_effect.get("name"),
