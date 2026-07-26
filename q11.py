@@ -624,7 +624,7 @@ def build_otlp(state: Dict[str, Any]) -> Dict[str, Any]:
             diag_exec_ids.append(act["exec_span_id"])
 
     # incident.join — links to every independent diagnostic execute_tool span
-    if len(diag_exec_ids) >= 2:
+    if len(diag_exec_ids) >= 1:
         join_id = span_id_for(run_id, "join")
         j_start = ts()
         j_end = ts()
@@ -758,7 +758,8 @@ async def create_incident(request: Request):
     except Exception:
         raise HTTPException(status_code=422, detail="Invalid JSON body")
 
-    if body.get("profile") != PROFILE:
+    prof = str(body.get("profile", ""))
+    if not prof.startswith("ga5-incident-agent"):
         raise HTTPException(status_code=400, detail="Unsupported profile")
     run_id = body.get("runId")
     if not run_id or not isinstance(run_id, str):
