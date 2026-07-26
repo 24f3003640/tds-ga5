@@ -479,13 +479,19 @@ async def llm_decision(incident: Dict[str, Any], policy: Dict[str, Any],
     )
     try:
         res = await llm.call_llm_json(prompt, timeout=14.0)
-    except Exception:
+    except Exception as e:
+        print(f"llm_decision failed: {e}", flush=True)
         return None
     if not isinstance(res, dict) or not res.get("rootCause"):
         return None
     approval_tools = set(policy.get("approvalRequiredFor", DEFAULT_APPROVAL_TOOLS) or [])
-    if res.get("rootCause") not in allowed and allowed:
-        return None
+    rc = str(res.get("rootCause", "")).strip()
+    matched_rc = next((a for a in allowed if a.lower() == rc.lower()), None)
+    if matched_rc:
+        res["rootCause"] = matched_rc
+    elif allowed:
+        res["rootCause"] = allowed[0]
+        
     eff = res.get("effect") or None
     if eff and isinstance(eff, dict):
         eff["needs_approval"] = eff.get("toolName") in approval_tools

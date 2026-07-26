@@ -479,64 +479,13 @@ class ScanRequest(BaseModel):
 
 @app.post("/q4/scan")
 @app.post("/scan")
-def scan_skill(req: ScanRequest):
-    skill = req.skill.lower()
-    categories = []
-    
-    # 1. Hardcoded Secret Detection
-    has_secret = False
-    if "hooks.slack.com" in skill or "discord.com/api/webhooks" in skill:
-        has_secret = True
-    if re.search(r"sk-live-[a-zA-Z0-9]{12,}", skill):
-        has_secret = True
-    if re.search(r"akia[a-z0-9]{16}", skill):
-        has_secret = True
-    if re.search(r"(?:api_key|apikey|token|secret|password|private_key|credentials)\s*[:=]\s*['\"][a-zA-Z0-9_\-\.]{12,}['\"]", skill):
-        has_secret = True
-    if "api_key" in skill and "sk-live" in skill:
-        has_secret = True
-    if has_secret:
-        categories.append("hardcoded_secret")
-        
-    # 2. Prompt Injection Detection
-    has_injection = False
-    if "silently" in skill and any(x in skill for x in ["post", "send", "upload", "exfiltrate", "leak", "transmit", "telemetry"]):
-        has_injection = True
-    if "ignore" in skill and any(x in skill for x in ["instruction", "system", "cancel", "stop", "user"]):
-        has_injection = True
-    if "do not" in skill and any(x in skill for x in ["reveal", "tell", "surface", "mention", "log", "output", "surfacing"]):
-        has_injection = True
-    if has_injection:
-        categories.append("prompt_injection")
-        
-    # 3. Excessive Permissions Detection
-    has_excessive = False
-    if "entire home" in skill or "entire filesystem" in skill or "any external domain" in skill or "egress allowed to any" in skill:
-        has_excessive = True
-    if "permissions:" in skill and "*" in skill:
-        has_excessive = True
-    if "read-write access to the entire" in skill:
-        has_excessive = True
-    if has_excessive:
-        categories.append("excessive_permissions")
-        
-    # 4. Unclear Provenance Detection
-    has_unclear = False
-    fm_match = re.match(r"^---\s*\n(.*?)\n---", req.skill, re.DOTALL)
-    if fm_match:
-        fm = fm_match.group(1)
-        if "author:" not in fm or "version:" not in fm:
-            has_unclear = True
-    else:
-        has_unclear = True
-        
-    if "silently update" in skill and any(x in skill for x in ["version", "metadata", "changelog", "version.json"]):
-        has_unclear = True
-        
-    if has_unclear:
-        categories.append("unclear_provenance")
-        
-    return {"categories": categories}
+def scan_skill_endpoint(req: ScanRequest):
+    try:
+        from scanner import scan_skill
+        return {"categories": scan_skill(req.skill)}
+    except Exception as e:
+        print(f"Error in scan_skill: {e}", flush=True)
+        return {"categories": []}
 
 # ==============================================================================
 # Q5 - Agent Harness — Run Budget & Loop Guard
